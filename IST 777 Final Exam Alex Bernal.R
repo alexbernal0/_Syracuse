@@ -51,7 +51,7 @@ vData <- usVaccinesClean
 head(vData)
 
 
-boxplot(usVaccines)
+boxplot(usVaccines2)
 summary(vData)
 View(vData)
 cor(vData[,2:6])
@@ -170,6 +170,34 @@ modelPred <- predict(Naive_Bayes_Model2, NBsData)
 #9. Was there any credible difference in overall reporting proportions between public and
 #private schools?
 
+# pubpriv reported    n       prop
+# 1 PRIVATE        N  252 0.03414172
+# 2 PRIVATE        Y 1397 0.18926975
+# 3  PUBLIC        N  148 0.02005148
+# 4  PUBLIC        Y 5584 0.75653705
+
+
+RepPubPriv <- c(1397, 5587)
+NpubPriv <- c(1649, 5732)
+
+#install.packages("devtools")
+#library(BayesianFirstAid)
+
+
+prop.test(RepPubPriv, NpubPriv)
+
+
+install.packages("devtools")
+library(devtools)
+install_github("rasmusab/bayesian_first_aid")
+
+library(BayesianFirstAid)
+fit <-bayes.prop.test(RepPubPriv, NpubPriv)
+plot(fit)
+summary(fit)
+diagnositcs(fit)
+
+
 
 #  Predictive Analyses:
 #  (For all of these analyses, use PctChildPoverty, PctFreeMeal, PctFamilyPoverty, Enrolled, and
@@ -183,15 +211,11 @@ head(sDataJoin)
 
 sDOut <- glm(formula = complete ~ PctChildPoverty + PctFreeMeal + PctFamilyPoverty + Enrolled + TotalSchools, family = binomial(), data = sDataJoin)
 summary(sDOut)
-
-
-#anova to analyze table of deviance
 anova(sDOut, test="Chisq")
 
+
 # the wider the gap between null deviance and residual deviance shows out our model
-# isdoing againt the null model. we can see the rise
-
-
+# is doing againt the null model. 
 
 # 
 # Call:
@@ -257,9 +281,10 @@ head(sDataJoin)
 
 regOut <- lm(PctUpToDate ~ PctChildPoverty + PctFreeMeal + PctFamilyPoverty + Enrolled + TotalSchools, data=sDataJoin)
 summary(regOut)
-
-#anova to analyze table of deviance
 anova(regOut, test="Chisq")
+varImp(regOut)
+#anova to analyze table of deviance
+
 
 varImp(regOut)
 
@@ -276,11 +301,20 @@ summary(BelOut)
 anova(BelOut, test="Chisq")
 varImp(BelOut)
 
+
+
+library(randomForest)
 fit_rf3 = randomForest(PctBeliefExempt ~ PctChildPoverty + PctFreeMeal + PctFamilyPoverty + Enrolled + TotalSchools, data = sDataJoin)
 # Create an importance based on mean decreasing gini
 importance(fit_rf3)
+# IncNodePurity
+# PctChildPoverty       4.513721
+# PctFreeMeal           6.333098
+# PctFamilyPoverty      4.629761
+# Enrolled              9.078441
+# TotalSchools          6.833434
 
-
+varImpPlot(fit_rf3,type=2)
 
 
 # Mean Decrease gini by importance measures how much each feature contributes to the homogeneity in the data.
